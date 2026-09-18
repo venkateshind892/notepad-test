@@ -1,4 +1,3 @@
-```python
 import streamlit as st
 import json
 import time
@@ -6,176 +5,171 @@ from google import genai
 from google.genai import types
 
 
-# ============================================================
+# =========================================================
 # PAGE CONFIG
-# ============================================================
+# =========================================================
 
 st.set_page_config(
-    page_title="ReqPilot AI",
+    page_title="ReqPilot",
     page_icon="🚀",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 
-# ============================================================
+# =========================================================
 # SESSION STATE
-# ============================================================
+# =========================================================
 
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-if "analysis_result" not in st.session_state:
-    st.session_state.analysis_result = None
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
 
 
-# ============================================================
-# GLASSMORPHISM UI
-# ============================================================
+# =========================================================
+# GLASS UI CSS
+# =========================================================
 
-st.markdown(
-    """
-    <style>
+st.markdown("""
+<style>
 
-    .stApp {
-        background:
-            radial-gradient(
-                circle at 10% 10%,
-                rgba(120, 80, 255, 0.25),
-                transparent 30%
-            ),
-            radial-gradient(
-                circle at 90% 20%,
-                rgba(0, 200, 255, 0.18),
-                transparent 30%
-            ),
-            radial-gradient(
-                circle at 50% 100%,
-                rgba(255, 0, 180, 0.12),
-                transparent 35%
-            ),
-            #070910;
+.stApp {
+    background:
+        radial-gradient(circle at 10% 10%, rgba(90, 70, 180, 0.22), transparent 30%),
+        radial-gradient(circle at 90% 20%, rgba(0, 170, 255, 0.16), transparent 28%),
+        radial-gradient(circle at 50% 100%, rgba(150, 50, 200, 0.14), transparent 35%),
+        #080b14;
+    color: #f5f7ff;
+}
 
-        color: white;
-    }
+.block-container {
+    max-width: 1250px;
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+}
 
-    .block-container {
-        max-width: 1250px;
-        padding-top: 2rem;
-    }
+div[data-testid="stVerticalBlockBorderWrapper"] {
+    background: rgba(255, 255, 255, 0.055);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 22px;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    padding: 8px;
+}
 
-    div[data-testid="stVerticalBlockBorderWrapper"] {
-        background: rgba(255,255,255,0.055);
-        border: 1px solid rgba(255,255,255,0.12);
-        border-radius: 24px;
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
+h1 {
+    font-size: 3.2rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -2px;
+}
 
-        box-shadow:
-            0 10px 40px rgba(0,0,0,0.28),
-            inset 0 1px 0 rgba(255,255,255,0.08);
-    }
+h2 {
+    font-weight: 750 !important;
+}
 
-    h1 {
-        font-weight: 800 !important;
-        letter-spacing: -2px;
-    }
+h3 {
+    font-weight: 700 !important;
+}
 
-    h2, h3 {
-        font-weight: 750 !important;
-    }
+p {
+    color: rgba(240, 243, 255, 0.78);
+}
 
-    .stButton > button {
-        border-radius: 15px;
-        min-height: 46px;
+.stButton > button {
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.07);
+    color: white;
+    font-weight: 650;
+    min-height: 45px;
+    transition: all 0.2s ease;
+}
 
-        background: rgba(255,255,255,0.07);
-        color: white;
+.stButton > button:hover {
+    background: rgba(255,255,255,0.13);
+    border-color: rgba(255,255,255,0.25);
+    transform: translateY(-1px);
+}
 
-        border: 1px solid rgba(255,255,255,0.14);
+.stButton > button[kind="primary"] {
+    background: linear-gradient(
+        135deg,
+        rgba(116, 80, 255, 0.85),
+        rgba(0, 174, 255, 0.75)
+    );
+    border: 1px solid rgba(255,255,255,0.18);
+}
 
-        transition: 0.2s ease;
-    }
+textarea {
+    background: rgba(255,255,255,0.055) !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    border-radius: 16px !important;
+    color: white !important;
+}
 
-    .stButton > button:hover {
-        background: rgba(255,255,255,0.14);
-        border-color: rgba(255,255,255,0.25);
-        transform: translateY(-1px);
-    }
+div[data-baseweb="select"] > div {
+    background: rgba(255,255,255,0.06);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.12);
+}
 
-    .stButton > button[kind="primary"] {
-        background:
-            linear-gradient(
-                135deg,
-                rgba(120,80,255,0.90),
-                rgba(0,180,255,0.80)
-            );
-    }
+div[data-testid="stMetric"] {
+    background: rgba(255,255,255,0.045);
+    border: 1px solid rgba(255,255,255,0.09);
+    padding: 14px;
+    border-radius: 16px;
+}
 
-    .stTextInput input,
-    .stTextArea textarea {
-        background: rgba(255,255,255,0.055) !important;
-        color: white !important;
-        border-radius: 15px !important;
-        border: 1px solid rgba(255,255,255,0.12) !important;
-    }
+button[data-baseweb="tab"] {
+    color: rgba(255,255,255,0.7);
+}
 
-    section[data-testid="stSidebar"] {
-        background: rgba(5,7,15,0.88);
-        border-right: 1px solid rgba(255,255,255,0.08);
-    }
+button[data-baseweb="tab"][aria-selected="true"] {
+    color: white;
+}
 
-    div[data-testid="stMetric"] {
-        background: rgba(255,255,255,0.045);
-        border: 1px solid rgba(255,255,255,0.09);
-        border-radius: 16px;
-        padding: 14px;
-    }
+section[data-testid="stSidebar"] {
+    background: rgba(7, 9, 18, 0.82);
+    border-right: 1px solid rgba(255,255,255,0.08);
+}
 
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+hr {
+    border-color: rgba(255,255,255,0.08);
+}
+
+code {
+    border-radius: 8px;
+}
+
+</style>
+""", unsafe_allow_html=True)
 
 
-# ============================================================
-# LOGIN PAGE
-# ============================================================
+# =========================================================
+# REQPILOT LOGIN
+# =========================================================
 
-if not st.session_state.authenticated:
+if not st.session_state.logged_in:
 
-    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.markdown("<br><br><br>", unsafe_allow_html=True)
 
-    left, center, right = st.columns(
-        [1, 1.4, 1]
-    )
+    col1, col2, col3 = st.columns([1, 1.5, 1])
 
-    with center:
+    with col2:
 
         with st.container(border=True):
 
             st.markdown(
-                """
-                <div style="
-                    text-align:center;
-                    padding:20px 0;
-                ">
-                    <div style="font-size:55px;">
-                        🚀
-                    </div>
+                "<h1 style='text-align:center;'>🚀 ReqPilot</h1>",
+                unsafe_allow_html=True
+            )
 
-                    <h1>
-                        ReqPilot
-                    </h1>
-
-                    <p>
-                        AI Requirements Engineering Agent
-                    </p>
-                </div>
-                """,
+            st.markdown(
+                "<p style='text-align:center;'>"
+                "AI Requirements Engineering Agent"
+                "</p>",
                 unsafe_allow_html=True
             )
 
@@ -187,30 +181,28 @@ if not st.session_state.authenticated:
             )
 
             password = st.text_input(
-                "🔐 Password",
+                "🔒 Password",
                 type="password",
                 placeholder="Enter password"
             )
 
             st.write("")
 
-            login = st.button(
-                "🚀 Login to ReqPilot",
+            if st.button(
+                "🚀 Login",
                 type="primary",
                 use_container_width=True
-            )
-
-            if login:
+            ):
 
                 if (
                     username == "reqpilot"
                     and password == "reqpilot123"
                 ):
 
-                    st.session_state.authenticated = True
+                    st.session_state.logged_in = True
 
                     st.success(
-                        "Login successful!"
+                        "Login successful! 🎉"
                     )
 
                     time.sleep(0.5)
@@ -226,141 +218,491 @@ if not st.session_state.authenticated:
             st.write("")
 
             st.caption(
-                "Authorized users only"
+                "Demo Login: reqpilot / reqpilot123"
             )
 
     st.stop()
 
 
-# ============================================================
-# GEMINI CONNECTION
-# ============================================================
+# =========================================================
+# SIDEBAR
+# =========================================================
 
-def get_api_key():
+with st.sidebar:
+
+    st.title("🚀 ReqPilot")
+
+    st.caption(
+        "AI Requirements Engineering Agent"
+    )
+
+    st.divider()
+
+    # -----------------------------------------------------
+    # AI CONNECTION
+    # -----------------------------------------------------
+
+    st.subheader("🔑 AI Connection")
+
+    api_key = None
 
     try:
 
-        return st.secrets[
-            "GEMINI_API_KEY"
-        ]
+        api_key = st.secrets["GEMINI_API_KEY"]
+
+        st.success(
+            "API Key Loaded from Secrets"
+        )
 
     except Exception:
 
-        return st.session_state.get(
-            "api_key"
+        api_key = st.text_input(
+            "Gemini API Key",
+            type="password",
+            placeholder="Enter API key"
         )
 
+    st.divider()
 
-# ============================================================
-# GEMINI CLIENT
-# ============================================================
+    # -----------------------------------------------------
+    # DEMO PRESET
+    # -----------------------------------------------------
 
-def get_client():
+    st.subheader("🎬 Demo Preset")
 
-    api_key = get_api_key()
+    preset = st.selectbox(
+        "Choose a product idea",
+        [
+            "Custom Idea",
+            "QuickCart Grocery Platform",
+            "AI Fitness Platform",
+            "EV Charging Platform",
+            "Student Learning Platform"
+        ]
+    )
 
-    if not api_key:
+    st.divider()
 
-        return None
+    # -----------------------------------------------------
+    # PIPELINE
+    # -----------------------------------------------------
 
-    return genai.Client(
-        api_key=api_key
+    st.subheader("⚙️ Pipeline")
+
+    st.write("💡 Raw Idea")
+    st.write("🧩 Requirement Extraction")
+    st.write("🏷️ Classification")
+    st.write("⚡ Prioritization")
+    st.write("🔎 Gap Detection")
+    st.write("🧪 Test Generation")
+
+    st.divider()
+
+    st.caption(
+        "G14 • AI Requirements Engineering Agent"
+    )
+
+    st.divider()
+
+    # -----------------------------------------------------
+    # LOGOUT
+    # -----------------------------------------------------
+
+    if st.button(
+        "🚪 Logout",
+        use_container_width=True
+    ):
+
+        st.session_state.logged_in = False
+        st.rerun()
+
+
+# =========================================================
+# DEMO INPUTS
+# =========================================================
+
+demo_inputs = {
+
+    "QuickCart Grocery Platform": """
+We want to build QuickCart, a grocery delivery platform.
+
+Users should be able to create accounts, browse and search for groceries,
+add products to a cart, make online payments, place orders, track deliveries,
+and receive order notifications.
+
+The platform should securely handle user information and payments, support
+multiple users, and provide a reliable shopping experience.
+""",
+
+    "AI Fitness Platform": """
+We want to build an AI fitness platform where users can create profiles,
+set fitness goals, follow personalized workout plans, track progress,
+and receive recommendations based on their activity.
+""",
+
+    "EV Charging Platform": """
+We want to build an EV charging platform where electric vehicle owners
+can find nearby charging stations, check availability, reserve a charging
+slot, make payments, and receive notifications when charging is complete.
+""",
+
+    "Student Learning Platform": """
+We want to build a student learning platform where students can access
+courses, watch lessons, complete quizzes, track their progress, and receive
+personalized learning recommendations.
+"""
+}
+
+
+# =========================================================
+# HERO
+# =========================================================
+
+with st.container(border=True):
+
+    st.caption(
+        "G14 • AI REQUIREMENTS ENGINEERING AGENT"
+    )
+
+    st.title("🚀 ReqPilot")
+
+    st.write(
+        "Turn an informal product idea into structured, "
+        "development-ready software requirements using AI."
+    )
+
+    st.write(
+        "Requirements • User Stories • Priorities • "
+        "Gaps • Test Cases • Dependencies"
     )
 
 
-# ============================================================
-# GENERAL AI CHAT
-# ============================================================
+# =========================================================
+# INPUT SECTION
+# =========================================================
 
-def ask_ai(question):
+st.write("")
 
-    client = get_client()
+if preset == "Custom Idea":
 
-    if client is None:
+    default_text = ""
 
-        return (
-            "⚠️ Gemini API key is not configured.\n\n"
-            "Add GEMINI_API_KEY in Streamlit secrets "
-            "or enter it from the sidebar."
-        )
+else:
 
-    prompt = f"""
-You are ReqPilot, an advanced AI Requirements Engineering
-and software development assistant.
-
-You can answer both:
-
-1. Software engineering questions
-2. General questions
-
-For software/project questions, provide structured,
-practical answers.
-
-For requirements engineering tasks, help with:
-
-- Functional requirements
-- Non-functional requirements
-- User stories
-- Acceptance criteria
-- MoSCoW prioritization
-- Requirement gaps
-- Ambiguity detection
-- Test cases
-- Technical dependencies
-- SRS
-- UML
-- System architecture
-- API design
-- Database design
-- Software development planning
-
-User question:
-
-{question}
-
-Answer clearly and accurately.
-Use headings and bullet points when useful.
-Do not unnecessarily mention that you are an AI.
-"""
-
-    try:
-
-        response = client.models.generate_content(
-
-            model="gemini-3.6-flash",
-
-            contents=prompt
-        )
-
-        return response.text
-
-    except Exception as e:
-
-        return f"❌ AI Error: {e}"
+    default_text = demo_inputs[preset]
 
 
-# ============================================================
-# REQUIREMENT ANALYZER
-# ============================================================
+with st.container(border=True):
 
-def analyze_requirements(idea):
+    st.subheader("💡 Describe Your Product")
 
-    client = get_client()
+    idea = st.text_area(
+        "Product / Startup Idea",
+        value=default_text,
+        height=190,
+        placeholder=(
+            "Example: We want to build an online grocery "
+            "delivery platform where users can..."
+        ),
+        label_visibility="collapsed"
+    )
 
-    if client is None:
 
-        return None
+# =========================================================
+# METRICS
+# =========================================================
 
-    prompt = f"""
-You are ReqPilot's Requirements Engineering Engine.
+word_count = (
+    len(idea.split())
+    if idea.strip()
+    else 0
+)
 
-Analyze this product idea:
+m1, m2, m3, m4 = st.columns(4)
+
+with m1:
+    st.metric(
+        "Input Words",
+        word_count
+    )
+
+with m2:
+    st.metric(
+        "AI Modules",
+        "6"
+    )
+
+with m3:
+    st.metric(
+        "Artifacts",
+        "6"
+    )
+
+with m4:
+    st.metric(
+        "AI Engine",
+        "Gemini"
+    )
+
+
+# =========================================================
+# PIPELINE
+# =========================================================
+
+st.write("")
+
+st.subheader(
+    "🔄 Requirement Intelligence Pipeline"
+)
+
+pipeline = [
+
+    ("💡", "Raw Idea", "User Input"),
+
+    ("🧩", "Extract", "Requirements"),
+
+    ("🏷️", "Classify", "FR / NFR"),
+
+    ("⚡", "Prioritize", "MoSCoW"),
+
+    ("🔎", "Detect Gaps", "Ambiguities"),
+
+    ("🧪", "Test Cases", "Validation")
+]
+
+cols = st.columns(6)
+
+for col, item in zip(
+    cols,
+    pipeline
+):
+
+    icon, title, subtitle = item
+
+    with col:
+
+        with st.container(border=True):
+
+            st.markdown(
+                f"### {icon}"
+            )
+
+            st.write(
+                f"**{title}**"
+            )
+
+            st.caption(
+                subtitle
+            )
+
+
+# =========================================================
+# DEMO DATA
+# =========================================================
+
+demo_data = {
+
+    "functional_requirements": [
+
+        "Users should be able to create an account and securely log in.",
+
+        "Users should be able to browse groceries by category and search for products.",
+
+        "Users should be able to add products to a shopping cart and update quantities.",
+
+        "Users should be able to place orders and make online payments.",
+
+        "Users should be able to view their order status and track delivery.",
+
+        "The system should send notifications for order confirmation and delivery updates."
+    ],
+
+    "non_functional_requirements": [
+
+        "User payment and personal information must be securely protected.",
+
+        "The application should provide fast response times during normal usage.",
+
+        "The system should remain available during high-demand periods.",
+
+        "The application should support multiple users placing orders simultaneously."
+    ],
+
+    "user_stories": [
+
+        {
+            "story":
+                "As a customer, I want to search for groceries so that I can quickly find the products I need.",
+
+            "acceptance_criteria": [
+
+                "Given the user is on the product page, when they enter a product name, then matching products should be displayed.",
+
+                "Given no matching product exists, when the user searches, then a suitable message should be displayed."
+            ]
+        },
+
+        {
+            "story":
+                "As a customer, I want to place an online order so that I can receive groceries at my preferred address.",
+
+            "acceptance_criteria": [
+
+                "Given the cart contains products, when the user confirms the order and payment succeeds, then the order should be created.",
+
+                "Given payment fails, when the user attempts to place the order, then the order should not be confirmed."
+            ]
+        },
+
+        {
+            "story":
+                "As a customer, I want to track my order so that I know its current delivery status.",
+
+            "acceptance_criteria": [
+
+                "Given an order has been placed, when the user opens order tracking, then the current order status should be displayed.",
+
+                "The user should receive updates when the delivery status changes."
+            ]
+        }
+    ],
+
+    "priorities": [
+
+        {
+            "requirement": "User registration and login",
+            "priority": "Must Have",
+            "reason":
+                "Users need secure accounts to manage orders and personal information."
+        },
+
+        {
+            "requirement": "Product search and browsing",
+            "priority": "Must Have",
+            "reason":
+                "Customers need to find products before placing an order."
+        },
+
+        {
+            "requirement": "Shopping cart",
+            "priority": "Must Have",
+            "reason":
+                "Customers need to select and manage products before checkout."
+        },
+
+        {
+            "requirement": "Online payment",
+            "priority": "Must Have",
+            "reason":
+                "Payment is required to complete an online order."
+        },
+
+        {
+            "requirement": "Order tracking",
+            "priority": "Should Have",
+            "reason":
+                "Tracking improves delivery visibility and customer experience."
+        },
+
+        {
+            "requirement": "Personalized product recommendations",
+            "priority": "Could Have",
+            "reason":
+                "Recommendations can improve product discovery but are not required for the core ordering flow."
+        }
+    ],
+
+    "ambiguities": [
+
+        "Which payment methods should be supported?",
+
+        "What delivery areas and geographical locations should be supported?",
+
+        "What happens when a product becomes unavailable after the user adds it to the cart?",
+
+        "Should users be able to cancel an order after payment?",
+
+        "What is the expected delivery time?",
+
+        "Should notifications be sent through SMS, email, push notifications, or all three?"
+    ],
+
+    "test_cases": [
+
+        {
+            "id": "TC-01",
+            "scenario":
+                "User searches for an available grocery product.",
+            "expected":
+                "Matching products should be displayed with product name, price, and availability."
+        },
+
+        {
+            "id": "TC-02",
+            "scenario":
+                "User adds products to the cart and changes the quantity.",
+            "expected":
+                "Cart quantity and total price should update correctly."
+        },
+
+        {
+            "id": "TC-03",
+            "scenario":
+                "User completes checkout with a successful payment.",
+            "expected":
+                "The order should be created and an order confirmation should be displayed."
+        },
+
+        {
+            "id": "TC-04",
+            "scenario":
+                "Payment fails during checkout.",
+            "expected":
+                "The order should not be confirmed and the user should receive an appropriate error message."
+        },
+
+        {
+            "id": "TC-05",
+            "scenario":
+                "User opens tracking for an existing order.",
+            "expected":
+                "The current delivery status should be displayed."
+        }
+    ],
+
+    "technical_dependencies": [
+
+        "User authentication and authorization",
+
+        "Product and inventory database",
+
+        "Shopping cart and order management backend",
+
+        "Payment gateway API",
+
+        "Delivery and order tracking service",
+
+        "Notification service",
+
+        "Web or mobile frontend"
+    ]
+}
+
+
+# =========================================================
+# GEMINI PROMPT
+# =========================================================
+
+def create_prompt(idea):
+
+    return f"""
+You are an AI Requirements Engineering Agent.
+
+Analyze the following software product idea:
 
 {idea}
 
-Return ONLY valid JSON.
-
-Use exactly this structure:
+Return ONLY valid JSON using exactly this structure:
 
 {{
     "functional_requirements": [],
@@ -389,403 +731,120 @@ Use exactly this structure:
     "technical_dependencies": []
 }}
 
-Requirements:
+Rules:
 
-- Extract functional requirements.
-- Extract non-functional requirements.
-- Generate realistic user stories.
-- Generate acceptance criteria.
-- Use MoSCoW prioritization.
-- Detect ambiguous or missing requirements.
-- Generate practical test cases.
-- Identify technical dependencies.
-- Do not invent unnecessary functionality.
+1. Extract clear functional requirements.
+2. Extract realistic non-functional requirements.
+3. Generate Agile-style user stories.
+4. Include Given/When/Then style acceptance criteria where useful.
+5. Prioritize requirements using MoSCoW:
+   Must Have, Should Have, Could Have, Won't Have.
+6. Identify missing or ambiguous requirements.
+7. Generate practical test cases.
+8. Identify realistic technical dependencies.
+9. Do not invent unnecessary features.
+10. Keep the output concise and suitable for a software development team.
 """
 
-    try:
 
-        response = client.models.generate_content(
+# =========================================================
+# GEMINI ANALYSIS
+# =========================================================
 
-            model="gemini-3.6-flash",
+def analyze_with_gemini(idea, key):
 
-            contents=prompt,
-
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json"
-            )
-        )
-
-        return json.loads(
-            response.text
-        )
-
-    except Exception as e:
-
-        st.error(
-            f"❌ Requirement analysis failed: {e}"
-        )
-
-        return None
-
-
-# ============================================================
-# SIDEBAR
-# ============================================================
-
-with st.sidebar:
-
-    st.markdown(
-        "# 🚀 ReqPilot"
+    client = genai.Client(
+        api_key=key
     )
 
-    st.caption(
-        "AI Requirements Engineering Agent"
+    prompt = create_prompt(
+        idea
     )
 
-    st.divider()
+    last_error = None
 
-    st.subheader(
-        "🔑 AI Configuration"
-    )
+    for attempt in range(3):
 
-    try:
+        try:
 
-        secret_key = st.secrets[
-            "GEMINI_API_KEY"
-        ]
+            response = client.models.generate_content(
 
-        st.success(
-            "Gemini API connected"
-        )
+                model="gemini-3.6-flash",
 
-    except Exception:
+                contents=prompt,
 
-        api_key_input = st.text_input(
-            "Gemini API Key",
-            type="password",
-            placeholder="Paste your API key"
-        )
-
-        if api_key_input:
-
-            st.session_state.api_key = (
-                api_key_input
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json"
+                )
             )
 
-            st.success(
-                "API key added"
+            return json.loads(
+                response.text
             )
 
-    st.divider()
+        except Exception as e:
 
-    st.subheader(
-        "⚙️ ReqPilot Modules"
-    )
+            last_error = e
 
-    st.write(
-        "💬 AI Chat"
-    )
+            error_text = str(e)
 
-    st.write(
-        "📋 Requirements"
-    )
-
-    st.write(
-        "👤 User Stories"
-    )
-
-    st.write(
-        "⚡ Prioritization"
-    )
-
-    st.write(
-        "🔎 Gap Detection"
-    )
-
-    st.write(
-        "🧪 Test Cases"
-    )
-
-    st.write(
-        "🔧 Technical Dependencies"
-    )
-
-    st.divider()
-
-    if st.button(
-        "🗑️ Clear Chat",
-        use_container_width=True
-    ):
-
-        st.session_state.messages = []
-
-        st.rerun()
-
-    if st.button(
-        "🚪 Logout",
-        use_container_width=True
-    ):
-
-        st.session_state.authenticated = False
-
-        st.session_state.messages = []
-
-        st.rerun()
-
-
-# ============================================================
-# MAIN HEADER
-# ============================================================
-
-with st.container(border=True):
-
-    st.markdown(
-        "## 🚀 ReqPilot AI"
-    )
-
-    st.write(
-        "Your AI-powered Requirements Engineering workspace."
-    )
-
-    st.caption(
-        "Ask questions, analyze ideas, generate requirements "
-        "and validate software specifications."
-    )
-
-
-# ============================================================
-# TOP METRICS
-# ============================================================
-
-st.write("")
-
-m1, m2, m3, m4 = st.columns(4)
-
-with m1:
-
-    st.metric(
-        "AI Engine",
-        "Gemini"
-    )
-
-with m2:
-
-    st.metric(
-        "Modules",
-        "7"
-    )
-
-with m3:
-
-    st.metric(
-        "Mode",
-        "AI + RE"
-    )
-
-with m4:
-
-    st.metric(
-        "Status",
-        "Online"
-    )
-
-
-# ============================================================
-# TABS
-# ============================================================
-
-st.write("")
-
-chat_tab, requirement_tab = st.tabs(
-    [
-        "💬 AI Assistant",
-        "🧠 Requirement Analyzer"
-    ]
-)
-
-
-# ============================================================
-# AI CHAT
-# ============================================================
-
-with chat_tab:
-
-    st.subheader(
-        "💬 Ask ReqPilot Anything"
-    )
-
-    st.caption(
-        "Requirements questions, coding doubts, "
-        "software architecture, project ideas or general questions."
-    )
-
-    # Display previous messages
-
-    for message in st.session_state.messages:
-
-        with st.chat_message(
-            message["role"]
-        ):
-
-            st.markdown(
-                message["content"]
-            )
-
-    question = st.chat_input(
-        "Ask ReqPilot anything..."
-    )
-
-    if question:
-
-        st.session_state.messages.append(
-            {
-                "role": "user",
-                "content": question
-            }
-        )
-
-        with st.chat_message(
-            "user"
-        ):
-
-            st.markdown(
-                question
-            )
-
-        with st.chat_message(
-            "assistant"
-        ):
-
-            with st.spinner(
-                "Thinking..."
+            if (
+                "503" in error_text
+                or "UNAVAILABLE" in error_text
             ):
 
-                answer = ask_ai(
-                    question
-                )
+                if attempt < 2:
 
-            st.markdown(
-                answer
-            )
+                    time.sleep(
+                        2 ** attempt
+                    )
 
-        st.session_state.messages.append(
-            {
-                "role": "assistant",
-                "content": answer
-            }
-        )
+                    continue
+
+            raise last_error
+
+    raise last_error
 
 
-# ============================================================
-# REQUIREMENT ANALYZER
-# ============================================================
+# =========================================================
+# DISPLAY RESULTS
+# =========================================================
 
-with requirement_tab:
-
-    st.subheader(
-        "🧠 AI Requirement Analyzer"
-    )
-
-    st.write(
-        "Enter your project idea and ReqPilot will convert "
-        "it into structured software requirements."
-    )
-
-    product_idea = st.text_area(
-        "Project / Product Idea",
-        height=180,
-        placeholder=(
-            "Example:\n\n"
-            "We want to build an AI-based platform "
-            "where students can upload study materials, "
-            "ask questions, generate quizzes and track progress."
-        )
-    )
-
-    analyze_button = st.button(
-        "⚡ Generate Requirements",
-        type="primary",
-        use_container_width=True
-    )
-
-    if analyze_button:
-
-        if not product_idea.strip():
-
-            st.warning(
-                "⚠️ Enter a project idea first."
-            )
-
-        elif not get_api_key():
-
-            st.error(
-                "❌ Gemini API key is required."
-            )
-
-        else:
-
-            with st.spinner(
-                "🤖 ReqPilot is analyzing your project..."
-            ):
-
-                result = analyze_requirements(
-                    product_idea
-                )
-
-            if result:
-
-                st.session_state.analysis_result = (
-                    result
-                )
-
-                st.success(
-                    "✅ Requirements generated successfully!"
-                )
-
-
-# ============================================================
-# DISPLAY REQUIREMENT RESULTS
-# ============================================================
-
-result = st.session_state.analysis_result
-
-if result:
+def display_results(data):
 
     st.write("")
 
     st.subheader(
-        "📊 Requirement Intelligence Report"
+        "📊 Generated Requirements"
     )
 
-    r1, r2, r3, r4, r5, r6 = st.tabs(
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
         [
             "📋 Requirements",
-            "👤 Stories",
-            "⚡ Priority",
+            "👤 User Stories",
+            "⚡ Priorities",
             "🔎 Gaps",
-            "🧪 Tests",
+            "🧪 Test Cases",
             "🔧 Technical"
         ]
     )
 
 
-    # --------------------------------------------------------
+    # =====================================================
     # REQUIREMENTS
-    # --------------------------------------------------------
+    # =====================================================
 
-    with r1:
+    with tab1:
 
         st.markdown(
             "### Functional Requirements"
         )
 
-        functional = result.get(
-            "functional_requirements",
-            []
-        )
-
-        for index, item in enumerate(
-            functional,
+        for i, req in enumerate(
+            data.get(
+                "functional_requirements",
+                []
+            ),
             1
         ):
 
@@ -794,23 +853,21 @@ if result:
             ):
 
                 st.write(
-                    f"**FR-{index:02d}**"
+                    f"**FR-{i:02d}**"
                 )
 
-                st.write(item)
+                st.write(req)
 
 
         st.markdown(
             "### Non-Functional Requirements"
         )
 
-        non_functional = result.get(
-            "non_functional_requirements",
-            []
-        )
-
-        for index, item in enumerate(
-            non_functional,
+        for i, req in enumerate(
+            data.get(
+                "non_functional_requirements",
+                []
+            ),
             1
         ):
 
@@ -819,840 +876,328 @@ if result:
             ):
 
                 st.write(
-                    f"**NFR-{index:02d}**"
+                    f"**NFR-{i:02d}**"
                 )
 
-                st.write(item)
+                st.write(req)
 
 
-    # --------------------------------------------------------
+    # =====================================================
     # USER STORIES
-    #
-```
-```python
-import streamlit as st
+    # =====================================================
 
+    with tab2:
 
-# ==========================================================
-# PAGE CONFIG
-# ==========================================================
+        stories = data.get(
+            "user_stories",
+            []
+        )
 
-st.set_page_config(
-    page_title="ReqPilot",
-    page_icon="🚀",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
+        if not stories:
 
-
-# ==========================================================
-# SESSION STATE
-# ==========================================================
-
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-
-# ==========================================================
-# PREMIUM GLASS UI
-# ==========================================================
-
-st.markdown(
-    """
-    <style>
-
-    /* ---------- MAIN BACKGROUND ---------- */
-
-    .stApp {
-        background:
-            radial-gradient(
-                circle at 15% 15%,
-                rgba(116, 72, 255, 0.30),
-                transparent 28%
-            ),
-            radial-gradient(
-                circle at 85% 20%,
-                rgba(0, 190, 255, 0.20),
-                transparent 30%
-            ),
-            radial-gradient(
-                circle at 50% 90%,
-                rgba(255, 70, 180, 0.16),
-                transparent 35%
-            ),
-            #060812;
-
-        color: #ffffff;
-    }
-
-
-    /* ---------- REMOVE DEFAULT TOP SPACE ---------- */
-
-    .block-container {
-        max-width: 1350px;
-        padding-top: 2rem;
-        padding-bottom: 4rem;
-    }
-
-
-    /* ---------- GLASS CONTAINERS ---------- */
-
-    div[data-testid="stVerticalBlockBorderWrapper"] {
-
-        background:
-            linear-gradient(
-                135deg,
-                rgba(255,255,255,0.10),
-                rgba(255,255,255,0.035)
-            );
-
-        border:
-            1px solid rgba(255,255,255,0.14);
-
-        border-radius: 28px;
-
-        backdrop-filter: blur(25px);
-        -webkit-backdrop-filter: blur(25px);
-
-        box-shadow:
-            0 20px 60px rgba(0,0,0,0.30),
-            inset 0 1px 0 rgba(255,255,255,0.10);
-
-        padding: 12px;
-    }
-
-
-    /* ---------- HEADINGS ---------- */
-
-    h1 {
-        font-size: 3.3rem !important;
-        font-weight: 800 !important;
-        letter-spacing: -2px;
-    }
-
-    h2 {
-        font-weight: 750 !important;
-    }
-
-    h3 {
-        font-weight: 700 !important;
-    }
-
-
-    /* ---------- NORMAL TEXT ---------- */
-
-    p {
-        color: rgba(245,248,255,0.78);
-    }
-
-
-    /* ---------- INPUT BOX ---------- */
-
-    .stTextInput input,
-    .stTextArea textarea {
-
-        background:
-            rgba(255,255,255,0.055) !important;
-
-        color: white !important;
-
-        border:
-            1px solid rgba(255,255,255,0.13) !important;
-
-        border-radius: 17px !important;
-
-        backdrop-filter: blur(15px);
-
-    }
-
-
-    .stTextInput input:focus,
-    .stTextArea textarea:focus {
-
-        border:
-            1px solid rgba(120,170,255,0.65) !important;
-
-        box-shadow:
-            0 0 20px rgba(90,120,255,0.18);
-
-    }
-
-
-    /* ---------- BUTTONS ---------- */
-
-    .stButton > button {
-
-        min-height: 48px;
-
-        border-radius: 16px;
-
-        background:
-            rgba(255,255,255,0.065);
-
-        color: white;
-
-        border:
-            1px solid rgba(255,255,255,0.14);
-
-        font-weight: 650;
-
-        transition:
-            all 0.2s ease;
-
-    }
-
-
-    .stButton > button:hover {
-
-        background:
-            rgba(255,255,255,0.13);
-
-        border:
-            1px solid rgba(255,255,255,0.25);
-
-        transform:
-            translateY(-2px);
-
-        box-shadow:
-            0 10px 30px rgba(0,0,0,0.25);
-
-    }
-
-
-    /* ---------- PRIMARY BUTTON ---------- */
-
-    .stButton > button[kind="primary"] {
-
-        background:
-            linear-gradient(
-                135deg,
-                rgba(116,75,255,0.90),
-                rgba(0,180,255,0.82)
-            );
-
-        border:
-            1px solid rgba(255,255,255,0.20);
-
-        box-shadow:
-            0 8px 30px rgba(70,100,255,0.25);
-
-    }
-
-
-    /* ---------- METRICS ---------- */
-
-    div[data-testid="stMetric"] {
-
-        background:
-            rgba(255,255,255,0.045);
-
-        border:
-            1px solid rgba(255,255,255,0.10);
-
-        border-radius: 20px;
-
-        padding: 15px;
-
-    }
-
-
-    /* ---------- TABS ---------- */
-
-    button[data-baseweb="tab"] {
-
-        color:
-            rgba(255,255,255,0.60);
-
-        font-weight:
-            600;
-
-    }
-
-
-    button[data-baseweb="tab"][aria-selected="true"] {
-
-        color:
-            white;
-
-    }
-
-
-    /* ---------- SIDEBAR ---------- */
-
-    section[data-testid="stSidebar"] {
-
-        background:
-            rgba(5,7,16,0.90);
-
-        border-right:
-            1px solid rgba(255,255,255,0.08);
-
-        backdrop-filter:
-            blur(25px);
-
-    }
-
-
-    /* ---------- CHAT MESSAGE ---------- */
-
-    div[data-testid="stChatMessage"] {
-
-        background:
-            rgba(255,255,255,0.045);
-
-        border:
-            1px solid rgba(255,255,255,0.08);
-
-        border-radius:
-            20px;
-
-        margin-bottom:
-            12px;
-
-    }
-
-
-    /* ---------- DIVIDER ---------- */
-
-    hr {
-
-        border-color:
-            rgba(255,255,255,0.08);
-
-    }
-
-
-    /* ---------- LOGIN CARD ---------- */
-
-    .login-title {
-
-        text-align: center;
-
-        font-size: 54px;
-
-        font-weight: 800;
-
-        margin-bottom: 0;
-
-    }
-
-    .login-subtitle {
-
-        text-align: center;
-
-        color:
-            rgba(255,255,255,0.60);
-
-        font-size: 15px;
-
-        margin-bottom: 25px;
-
-    }
-
-
-    /* ---------- GLASS BADGE ---------- */
-
-    .glass-badge {
-
-        display: inline-block;
-
-        padding: 8px 14px;
-
-        border-radius: 30px;
-
-        background:
-            rgba(255,255,255,0.07);
-
-        border:
-            1px solid rgba(255,255,255,0.12);
-
-        color:
-            rgba(255,255,255,0.80);
-
-        font-size: 13px;
-
-    }
-
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-
-# ==========================================================
-# LOGIN PAGE
-# ==========================================================
-
-if not st.session_state.logged_in:
-
-    st.markdown("<br><br><br>", unsafe_allow_html=True)
-
-    left, center, right = st.columns(
-        [1, 1.35, 1]
-    )
-
-    with center:
-
-        with st.container(border=True):
-
-            st.markdown(
-                """
-                <div class="login-title">
-                    🚀
-                </div>
-
-                <h1 style="text-align:center;">
-                    ReqPilot
-                </h1>
-
-                <div class="login-subtitle">
-                    AI Requirements Engineering Agent
-                </div>
-                """,
-                unsafe_allow_html=True
+            st.info(
+                "No user stories generated."
             )
 
-            st.markdown(
-                """
-                <div style="
-                    text-align:center;
-                    margin-bottom:20px;
-                ">
-                    <span class="glass-badge">
-                        🔐 Secure Workspace
-                    </span>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+        for i, story in enumerate(
+            stories,
+            1
+        ):
 
-            username = st.text_input(
-                "👤 Username",
-                placeholder="Enter your username"
-            )
-
-            password = st.text_input(
-                "🔒 Password",
-                type="password",
-                placeholder="Enter your password"
-            )
-
-            st.write("")
-
-            if st.button(
-                "🚀 Continue to ReqPilot",
-                type="primary",
-                use_container_width=True
+            with st.container(
+                border=True
             ):
 
-                if (
-                    username == "reqpilot"
-                    and password == "reqpilot123"
-                ):
+                st.markdown(
+                    f"### 👤 User Story {i}"
+                )
 
-                    st.session_state.logged_in = True
+                st.write(
+                    story.get(
+                        "story",
+                        ""
+                    )
+                )
 
-                    st.rerun()
+                criteria = story.get(
+                    "acceptance_criteria",
+                    []
+                )
 
-                else:
+                if criteria:
 
-                    st.error(
-                        "Invalid username or password."
+                    st.write(
+                        "**Acceptance Criteria**"
                     )
 
-            st.write("")
+                    for criterion in criteria:
 
-            st.caption(
-                "Demo: reqpilot / reqpilot123"
-            )
-
-    st.stop()
+                        st.write(
+                            f"• {criterion}"
+                        )
 
 
-# ==========================================================
-# SIDEBAR
-# ==========================================================
+    # =====================================================
+    # PRIORITIES
+    # =====================================================
 
-with st.sidebar:
+    with tab3:
 
-    st.markdown(
-        "## 🚀 ReqPilot"
-    )
-
-    st.caption(
-        "AI Requirements Engineering"
-    )
-
-    st.divider()
-
-    st.markdown(
-        "### 🧭 Workspace"
-    )
-
-    st.write(
-        "💬 AI Assistant"
-    )
-
-    st.write(
-        "🧠 Requirement Analyzer"
-    )
-
-    st.write(
-        "📋 User Stories"
-    )
-
-    st.write(
-        "⚡ Prioritization"
-    )
-
-    st.write(
-        "🔎 Gap Detection"
-    )
-
-    st.write(
-        "🧪 Test Cases"
-    )
-
-    st.write(
-        "🔧 Dependencies"
-    )
-
-    st.divider()
-
-    if st.button(
-        "🗑️ Clear Conversation",
-        use_container_width=True
-    ):
-
-        st.session_state.messages = []
-
-        st.rerun()
-
-    if st.button(
-        "🚪 Logout",
-        use_container_width=True
-    ):
-
-        st.session_state.logged_in = False
-
-        st.session_state.messages = []
-
-        st.rerun()
-
-
-# ==========================================================
-# MAIN HEADER
-# ==========================================================
-
-with st.container(border=True):
-
-    c1, c2 = st.columns(
-        [4, 1]
-    )
-
-    with c1:
-
-        st.markdown(
-            "# 🚀 ReqPilot"
+        priorities = data.get(
+            "priorities",
+            []
         )
 
-        st.write(
-            "AI-powered requirements engineering workspace."
+        for item in priorities:
+
+            with st.container(
+                border=True
+            ):
+
+                st.write(
+                    f"**{item.get('requirement', 'Requirement')}**"
+                )
+
+                st.write(
+                    f"Priority: **{item.get('priority', 'N/A')}**"
+                )
+
+                st.caption(
+                    item.get(
+                        "reason",
+                        ""
+                    )
+                )
+
+
+    # =====================================================
+    # GAPS
+    # =====================================================
+
+    with tab4:
+
+        ambiguities = data.get(
+            "ambiguities",
+            []
         )
 
-    with c2:
+        if not ambiguities:
 
-        st.markdown(
-            """
-            <div style="
-                text-align:right;
-                padding-top:20px;
-            ">
-                <span class="glass-badge">
-                    🟢 AI ONLINE
-                </span>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-
-# ==========================================================
-# METRICS
-# ==========================================================
-
-st.write("")
-
-a, b, c, d = st.columns(4)
-
-with a:
-
-    st.metric(
-        "AI Engine",
-        "Gemini"
-    )
-
-with b:
-
-    st.metric(
-        "Modules",
-        "7"
-    )
-
-with c:
-
-    st.metric(
-        "Workspace",
-        "Active"
-    )
-
-with d:
-
-    st.metric(
-        "Mode",
-        "AI + RE"
-    )
-
-
-# ==========================================================
-# MAIN TABS
-# ==========================================================
-
-st.write("")
-
-chat_tab, analyzer_tab = st.tabs(
-    [
-        "💬 AI Assistant",
-        "🧠 Requirement Analyzer"
-    ]
-)
-
-
-# ==========================================================
-# AI ASSISTANT
-# ==========================================================
-
-with chat_tab:
-
-    with st.container(border=True):
-
-        st.markdown(
-            "## 💬 Ask ReqPilot"
-        )
-
-        st.caption(
-            "Ask questions about requirements, coding, "
-            "software engineering, projects or general topics."
-        )
-
-        st.divider()
-
-        if not st.session_state.messages:
-
-            st.markdown(
-                """
-                ### 👋 Welcome to ReqPilot
-
-                You can ask things like:
-
-                • What is a functional requirement?
-
-                • Generate requirements for an AI project.
-
-                • Explain SRS.
-
-                • Create user stories for my application.
-
-                • What is the difference between FR and NFR?
-
-                • Help me design my project architecture.
-                """
+            st.success(
+                "No major ambiguities detected."
             )
 
         else:
 
-            for message in st.session_state.messages:
+            for i, item in enumerate(
+                ambiguities,
+                1
+            ):
 
-                with st.chat_message(
-                    message["role"]
+                with st.container(
+                    border=True
                 ):
 
-                    st.markdown(
-                        message["content"]
+                    st.write(
+                        f"🔎 **Gap {i}**"
                     )
 
-        question = st.chat_input(
-            "Ask ReqPilot anything..."
+                    st.write(item)
+
+
+    # =====================================================
+    # TEST CASES
+    # =====================================================
+
+    with tab5:
+
+        test_cases = data.get(
+            "test_cases",
+            []
         )
 
-        if question:
+        for test in test_cases:
 
-            st.session_state.messages.append(
-                {
-                    "role": "user",
-                    "content": question
-                }
-            )
-
-            with st.chat_message(
-                "user"
+            with st.container(
+                border=True
             ):
 
-                st.markdown(
-                    question
+                st.write(
+                    f"### 🧪 {test.get('id', 'Test Case')}"
                 )
 
-            # Frontend placeholder response.
-            # Connect Gemini backend here.
-
-            with st.chat_message(
-                "assistant"
-            ):
-
-                response = (
-                    "🤖 ReqPilot received your question.\n\n"
-                    "Connect your Gemini backend to generate "
-                    "the real AI response."
+                st.write(
+                    f"**Scenario:** "
+                    f"{test.get('scenario', '')}"
                 )
 
-                st.markdown(
-                    response
+                st.write(
+                    f"**Expected:** "
+                    f"{test.get('expected', '')}"
                 )
 
-            st.session_state.messages.append(
-                {
-                    "role": "assistant",
-                    "content": response
-                }
-            )
 
+    # =====================================================
+    # TECHNICAL
+    # =====================================================
 
-# ==========================================================
-# REQUIREMENT ANALYZER
-# ==========================================================
+    with tab6:
 
-with analyzer_tab:
-
-    with st.container(border=True):
-
-        st.markdown(
-            "## 🧠 Requirement Analyzer"
+        dependencies = data.get(
+            "technical_dependencies",
+            []
         )
 
-        st.caption(
-            "Convert your raw product idea into structured requirements."
-        )
+        for dependency in dependencies:
 
-        st.divider()
-
-        project_idea = st.text_area(
-            "💡 Product Idea",
-            placeholder=(
-                "Describe your project here..."
-            ),
-            height=180
-        )
-
-        st.write("")
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-
-            st.button(
-                "📋 Extract Requirements",
-                type="primary",
-                use_container_width=True
+            st.write(
+                f"🔧 {dependency}"
             )
 
-        with col2:
+    # =====================================================
+    # DOWNLOAD
+    # =====================================================
 
-            st.button(
-                "🧹 Clear",
-                use_container_width=True
-            )
+    st.divider()
+
+    json_data = json.dumps(
+        data,
+        indent=2,
+        ensure_ascii=False
+    )
+
+    st.download_button(
+        "📥 Download Requirements Report",
+        data=json_data,
+        file_name="reqpilot_requirements.json",
+        mime="application/json",
+        use_container_width=True
+    )
 
 
-# ==========================================================
-# PIPELINE
-# ==========================================================
+# =========================================================
+# ACTION BUTTONS
+# =========================================================
 
 st.write("")
 
-st.markdown(
-    "## ⚙️ ReqPilot Pipeline"
-)
+col1, col2 = st.columns(2)
 
-pipeline = [
+with col1:
 
-    ("💡", "Idea", "Raw Input"),
+    analyze = st.button(
+        "⚡ Analyze Requirements",
+        type="primary",
+        use_container_width=True
+    )
 
-    ("🧩", "Extract", "Requirements"),
+with col2:
 
-    ("🏷️", "Classify", "FR / NFR"),
-
-    ("⚡", "Prioritize", "MoSCoW"),
-
-    ("🔎", "Detect", "Gaps"),
-
-    ("🧪", "Validate", "Test Cases")
-
-]
-
-columns = st.columns(
-    len(pipeline)
-)
-
-for column, item in zip(
-    columns,
-    pipeline
-):
-
-    icon, title, subtitle = item
-
-    with column:
-
-        with st.container(border=True):
-
-            st.markdown(
-                f"## {icon}"
-            )
-
-            st.write(
-                f"**{title}**"
-            )
-
-            st.caption(
-                subtitle
-            )
+    demo = st.button(
+        "🎬 Demo Mode",
+        use_container_width=True
+    )
 
 
-# ==========================================================
-# FOOTER
-# ==========================================================
+# =========================================================
+# LIVE AI ANALYSIS
+# =========================================================
+
+if analyze:
+
+    if not idea.strip():
+
+        st.warning(
+            "⚠️ Please enter a product idea first."
+        )
+
+    elif not api_key:
+
+        st.error(
+            "❌ Gemini API key is required."
+        )
+
+    else:
+
+        with st.spinner(
+            "🤖 Analyzing requirements..."
+        ):
+
+            try:
+
+                result = analyze_with_gemini(
+                    idea,
+                    api_key
+                )
+
+                st.success(
+                    "✅ Requirements generated successfully!"
+                )
+
+                display_results(
+                    result
+                )
+
+            except Exception as e:
+
+                st.error(
+                    f"❌ AI analysis failed: {e}"
+                )
+
+
+# =========================================================
+# DEMO MODE
+# =========================================================
+
+if demo:
+
+    if preset == "QuickCart Grocery Platform":
+
+        st.success(
+            "🎬 QuickCart Demo Mode activated"
+        )
+
+        display_results(
+            demo_data
+        )
+
+    else:
+
+        st.info(
+            "🎬 Demo Mode currently contains the "
+            "QuickCart sample. Select QuickCart Grocery "
+            "Platform from the Demo Preset."
+        )
+
+
+# =========================================================
+# TECHNICAL CONTRIBUTION
+# =========================================================
 
 st.write("")
 
 with st.container(border=True):
 
-    st.markdown(
-        """
-        <div style="
-            text-align:center;
-            padding:10px;
-        ">
-            <b>🚀 ReqPilot</b>
-            <br>
-            <span style="
-                color:rgba(255,255,255,0.5);
-            ">
-                AI Requirements Engineering Agent
-            </span>
-        </div>
-        """,
-        unsafe_allow_html=True
+    st.subheader(
+        "🧠 Technical Contribution"
     )
-```
+
+    st.write(
+        "Our solution is not just a generic API wrapper. "
+        "ReqPilot uses a structured multi-stage requirements "
+        "analysis pipeline covering requirement classification, "
+        "ambiguity detection, prioritization, user-story "
+        "generation and test-case generation from a single "
+        "project description."
+    )
+
+
+# =========================================================
+# FOOTER
+# =========================================================
+
+st.write("")
+
+st.caption(
+    "🚀 ReqPilot • AI Requirements Engineering Agent • G14"
+)
