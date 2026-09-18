@@ -2547,4 +2547,58 @@ st.write("")
 st.caption(
     "ReqPilot AI • AI Requirements Engineering Agent • G14"
 )
+import streamlit as st
+import PyPDF2
+
+def read_pdf(file):
+    reader = PyPDF2.PdfReader(file)
+
+    text = ""
+
+    for page in reader.pages:
+        extracted = page.extract_text()
+
+        if extracted:
+            text += extracted + "\n"
+
+    return text
+
+
+def read_txt(file):
+    return file.read().decode("utf-8", errors="ignore")
+
+
+def read_file(file):
+    file_type = file.name.lower()
+
+    if file_type.endswith(".pdf"):
+        return read_pdf(file)
+
+    elif file_type.endswith(".txt"):
+        return read_txt(file)
+
+    else:
+        return "Unsupported file type."
+
+
+st.subheader("📂 ReqPilot File Reader")
+
+uploaded_file = st.file_uploader(
+    "Upload your requirement file",
+    type=["pdf", "txt"]
+)
+
+if uploaded_file:
+
+    content = read_file(uploaded_file)
+
+    st.success(f"Loaded: {uploaded_file.name}")
+
+    st.text_area(
+        "📄 File Content",
+        content,
+        height=500
+    )
+    import streamlit as st
+import PyPDF2
 
