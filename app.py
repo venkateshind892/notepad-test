@@ -833,4 +833,219 @@ def display_results(data):
     # TECHNICAL
     # -----------------------------------------------------
 
-    with
+    with tab6:
+
+        dependencies = data.get(
+            "technical_dependencies",
+            []
+        )
+
+        st.markdown("### 🔧 Technical Dependencies")
+
+        for dependency in dependencies:
+
+            st.write(f"• {dependency}")
+
+
+    # -----------------------------------------------------
+    # DOWNLOAD JSON
+    # -----------------------------------------------------
+
+    st.divider()
+
+    st.download_button(
+
+        label="⬇️ Download Requirements JSON",
+
+        data=json.dumps(
+            data,
+            indent=2,
+            ensure_ascii=False
+        ),
+
+        file_name="reqpilot_requirements.json",
+
+        mime="application/json"
+    )
+
+
+# =========================================================
+# ACTION BUTTONS
+# =========================================================
+
+st.write("")
+
+col1, col2 = st.columns(2)
+
+
+with col1:
+
+    analyze_button = st.button(
+        "⚡ Analyze Requirements",
+        type="primary",
+        use_container_width=True
+    )
+
+
+with col2:
+
+    demo_button = st.button(
+        "🎬 Demo Mode",
+        use_container_width=True
+    )
+
+
+# =========================================================
+# LIVE AI ANALYSIS
+# =========================================================
+
+if analyze_button:
+
+    if not idea.strip():
+
+        st.warning(
+            "Please enter a product or startup idea first."
+        )
+
+    elif not api_key:
+
+        st.error(
+            "Gemini API key not found. Add GEMINI_API_KEY in Streamlit Secrets."
+        )
+
+    else:
+
+        with st.spinner(
+            "🤖 ReqPilot is analyzing your requirements..."
+        ):
+
+            try:
+
+                result = analyze_with_gemini(
+                    idea,
+                    api_key
+                )
+
+                st.success(
+                    "✅ Requirements successfully generated!"
+                )
+
+                display_results(result)
+
+            except Exception as e:
+
+                error_text = str(e)
+
+                if "503" in error_text or "UNAVAILABLE" in error_text:
+
+                    st.error(
+                        "Gemini is temporarily unavailable. "
+                        "Please try again or use Demo Mode."
+                    )
+
+                elif (
+                    "429" in error_text
+                    or "quota" in error_text.lower()
+                ):
+
+                    st.error(
+                        "Gemini API quota/rate limit reached. "
+                        "Please try again later or use Demo Mode."
+                    )
+
+                else:
+
+                    st.error(
+                        f"Execution Error: {error_text}"
+                    )
+
+
+# =========================================================
+# DEMO MODE
+# =========================================================
+
+if demo_button:
+
+    st.success(
+        "🎬 Demo Mode activated — showing QuickCart example."
+    )
+
+    display_results(demo_data)
+
+
+# =========================================================
+# FEATURES
+# =========================================================
+
+st.write("")
+st.divider()
+
+st.subheader("✨ Core Capabilities")
+
+c1, c2, c3 = st.columns(3)
+
+
+with c1:
+
+    with st.container(border=True):
+
+        st.markdown("### 🧩 Requirement Extraction")
+
+        st.write(
+            "Converts an informal product idea into structured "
+            "functional and non-functional requirements."
+        )
+
+
+with c2:
+
+    with st.container(border=True):
+
+        st.markdown("### 🔎 Ambiguity Detection")
+
+        st.write(
+            "Identifies missing decisions and unclear requirements "
+            "before development begins."
+        )
+
+
+with c3:
+
+    with st.container(border=True):
+
+        st.markdown("### 🧪 Test Generation")
+
+        st.write(
+            "Creates practical test scenarios from the generated "
+            "requirements."
+        )
+
+
+# =========================================================
+# TECHNICAL CONTRIBUTION
+# =========================================================
+
+st.write("")
+
+with st.container(border=True):
+
+    st.subheader("🧠 Technical Contribution")
+
+    st.write(
+        "Our solution is not just a generic API wrapper. "
+        "ReqPilot uses a structured multi-stage requirements analysis "
+        "pipeline covering requirement classification, ambiguity detection, "
+        "prioritization, user-story generation and test-case generation "
+        "from a single project description."
+    )
+
+
+# =========================================================
+# FOOTER
+# =========================================================
+
+st.write("")
+
+st.caption(
+    "ReqPilot • AI Requirements Engineering Agent • G14"
+)
