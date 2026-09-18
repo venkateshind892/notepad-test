@@ -2654,3 +2654,41 @@ if uploaded_file is not None:
 
 else:
     st.info("👆 Upload a TXT or Markdown requirement file to start.")
+    from pypdf import PdfReader
+
+from pypdf import PdfReader
+
+reader = PdfReader(file)
+def read_pdf(file):
+    reader = PdfReader(file)
+
+    text = ""
+
+    for page in reader.pages:
+        extracted = page.extract_text()
+
+        if extracted:
+            text += extracted + "\n"
+
+    return text
+    uploaded_file = st.file_uploader(
+    "Upload PDF",
+    type=["pdf"]
+)
+
+if uploaded_file:
+    try:
+        pdf_text = read_pdf(uploaded_file)
+
+        st.success("PDF loaded successfully!")
+
+        st.text_area(
+            "📖 Reader Mode",
+            pdf_text,
+            height=600
+        )
+
+    except Exception as e:
+        st.error(f"PDF Error: {e}")
+        # DELETE THIS
+import PyPDF2
