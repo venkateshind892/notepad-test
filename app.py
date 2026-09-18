@@ -1050,387 +1050,373 @@ st.caption(
     "ReqPilot • AI Requirements Engineering Agent • G14"
 )import streamlit as st
 
-# =========================================================
+
+# ============================================================
 # PAGE CONFIG
-# =========================================================
+# ============================================================
 
 st.set_page_config(
-    page_title="ReqPilot",
-    page_icon="🔐",
-    layout="centered"
+    page_title="ReqPilot AI",
+    page_icon="🚀",
+    layout="wide"
 )
 
-# =========================================================
-# LOGIN CREDENTIALS
-# CHANGE THESE
-# =========================================================
 
-USERNAME = "admin"
-PASSWORD = "12345"
-PASSKEY = "REQPILOT"
+# ============================================================
+# SESSION STATE
+# ============================================================
 
-# =========================================================
-# SESSION
-# =========================================================
-
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
 
 
-# =========================================================
-# PREMIUM LOCKSCREEN UI
-# =========================================================
+# ============================================================
+# LIQUID GLASS UI
+# ============================================================
 
 st.markdown("""
 <style>
-
-/* ---------- BACKGROUND ---------- */
 
 .stApp {
     background:
         radial-gradient(
             circle at 15% 15%,
-            rgba(92, 65, 255, 0.35),
+            rgba(110, 90, 255, 0.30),
             transparent 30%
         ),
         radial-gradient(
-            circle at 85% 20%,
-            rgba(0, 190, 255, 0.25),
+            circle at 85% 15%,
+            rgba(0, 200, 255, 0.20),
             transparent 30%
         ),
         radial-gradient(
-            circle at 50% 100%,
-            rgba(170, 70, 255, 0.20),
+            circle at 50% 90%,
+            rgba(255, 80, 190, 0.15),
             transparent 35%
         ),
-        #060810;
+        #070912;
 
-    color: #ffffff;
+    color: white;
 }
 
-/* ---------- CENTER ---------- */
 
 .block-container {
-    max-width: 460px;
-    padding-top: 7vh;
-    padding-bottom: 5vh;
+    max-width: 1200px;
+    padding-top: 2rem;
 }
 
-/* ---------- LOCK ICON ---------- */
 
-.lock-icon {
-    width: 92px;
-    height: 92px;
+/* Glass card */
 
-    margin: 0 auto 22px auto;
+div[data-testid="stVerticalBlockBorderWrapper"] {
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: rgba(255,255,255,0.07);
 
-    border-radius: 50%;
-
-    background: rgba(255,255,255,0.09);
-
-    border: 1px solid rgba(255,255,255,0.20);
-
-    box-shadow:
-        0 15px 50px rgba(0,0,0,0.35),
-        inset 0 1px 0 rgba(255,255,255,0.15);
-
-    backdrop-filter: blur(25px);
-
-    font-size: 42px;
-}
-
-/* ---------- TITLE ---------- */
-
-.login-title {
-    text-align: center;
-
-    font-size: 38px;
-
-    font-weight: 800;
-
-    letter-spacing: -1.5px;
-
-    color: #ffffff;
-
-    margin-bottom: 6px;
-}
-
-/* ---------- SUBTITLE ---------- */
-
-.login-subtitle {
-    text-align: center;
-
-    font-size: 15px;
-
-    color: rgba(255,255,255,0.65);
-
-    margin-bottom: 28px;
-}
-
-/* ---------- GLASS PANEL ---------- */
-
-.login-panel {
-    padding: 32px;
+    border: 1px solid rgba(255,255,255,0.15);
 
     border-radius: 28px;
 
-    background: rgba(255,255,255,0.075);
+    backdrop-filter: blur(25px);
 
-    border: 1px solid rgba(255,255,255,0.16);
-
-    backdrop-filter: blur(30px);
-
-    -webkit-backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(25px);
 
     box-shadow:
-        0 25px 70px rgba(0,0,0,0.45),
-        inset 0 1px 0 rgba(255,255,255,0.12);
+        0 20px 60px rgba(0,0,0,0.30),
+        inset 0 1px 0 rgba(255,255,255,0.15);
 }
 
-/* ---------- INPUT LABELS ---------- */
 
-.stTextInput label {
-    color: #ffffff !important;
-
-    font-size: 14px !important;
-
-    font-weight: 700 !important;
-}
-
-/* ---------- INPUT BOX ---------- */
+/* Inputs */
 
 div[data-baseweb="input"] {
-    background: rgba(255,255,255,0.075) !important;
 
-    border: 1px solid rgba(255,255,255,0.16) !important;
+    background: rgba(255,255,255,0.06) !important;
+
+    border: 1px solid rgba(255,255,255,0.12) !important;
 
     border-radius: 14px !important;
-
-    min-height: 48px;
 }
 
-/* ---------- INPUT TEXT ---------- */
 
 div[data-baseweb="input"] input {
-    color: #ffffff !important;
 
-    font-size: 15px !important;
+    color: white !important;
 }
 
-/* ---------- PLACEHOLDER ---------- */
 
-div[data-baseweb="input"] input::placeholder {
-    color: rgba(255,255,255,0.40) !important;
-}
-
-/* ---------- LOGIN BUTTON ---------- */
+/* Buttons */
 
 .stButton > button {
 
     width: 100%;
 
-    height: 52px;
+    min-height: 48px;
 
     border-radius: 15px;
 
-    border: 1px solid rgba(255,255,255,0.20);
+    background: rgba(255,255,255,0.08);
+
+    color: white;
+
+    border: 1px solid rgba(255,255,255,0.15);
+
+    font-weight: 700;
+
+    transition: 0.2s;
+}
+
+
+.stButton > button:hover {
+
+    background: rgba(255,255,255,0.15);
+
+    transform: translateY(-2px);
+}
+
+
+/* Primary button */
+
+.stButton > button[kind="primary"] {
 
     background:
         linear-gradient(
             135deg,
-            #7057ff,
-            #168cff
+            #765cff,
+            #00b8ff
         );
 
-    color: white;
-
-    font-size: 16px;
-
-    font-weight: 750;
+    border: 1px solid rgba(255,255,255,0.25);
 
     box-shadow:
-        0 12px 30px rgba(50,100,255,0.25);
-
-    transition: all 0.2s ease;
+        0 10px 30px rgba(80,100,255,0.30);
 }
 
-.stButton > button:hover {
 
-    transform: translateY(-2px);
+/* Text */
 
-    box-shadow:
-        0 16px 38px rgba(50,100,255,0.35);
-}
-
-/* ---------- ERROR ---------- */
-
-div[data-testid="stAlert"] {
-    border-radius: 13px;
-}
-
-/* ---------- FOOTER ---------- */
-
-.footer {
-    text-align: center;
-
-    color: rgba(255,255,255,0.35);
-
-    font-size: 12px;
-
-    margin-top: 22px;
-}
-
-/* ---------- HIDE STREAMLIT UI ---------- */
-
-#MainMenu {
-    visibility: hidden;
-}
-
-header {
-    visibility: hidden;
-}
-
-footer {
-    visibility: hidden;
+p {
+    color: rgba(255,255,255,0.75);
 }
 
 </style>
 """, unsafe_allow_html=True)
 
 
-# =========================================================
-# AFTER LOGIN
-# =========================================================
+# ============================================================
+# LOGIN FUNCTION
+# ============================================================
 
-if st.session_state.authenticated:
-
-    st.markdown(
-        '<div class="lock-icon">🚀</div>',
-        unsafe_allow_html=True
-    )
-
-    st.markdown(
-        '<div class="login-title">ReqPilot</div>',
-        unsafe_allow_html=True
-    )
-
-    st.markdown(
-        '<div class="login-subtitle">Welcome back</div>',
-        unsafe_allow_html=True
-    )
-
-    st.success("🔓 Access granted")
+def show_login():
 
     st.write("")
-
-    st.subheader("AI Requirements Engineering")
-
-    st.write(
-        "Your ReqPilot workspace is ready."
-    )
-
+    st.write("")
     st.write("")
 
-    if st.button("🔒 Lock / Logout"):
+    left, center, right = st.columns(
+        [1, 1.4, 1]
+    )
 
-        st.session_state.authenticated = False
+    with center:
 
-        st.rerun()
+        with st.container(border=True):
+
+            st.markdown(
+                "<h1 style='text-align:center;'>🚀</h1>",
+                unsafe_allow_html=True
+            )
+
+            st.markdown(
+                """
+                <h2 style="text-align:center;">
+                    ReqPilot AI
+                </h2>
+                """,
+                unsafe_allow_html=True
+            )
+
+            st.markdown(
+                """
+                <p style="text-align:center;">
+                    AI Requirements Engineering Agent
+                </p>
+                """,
+                unsafe_allow_html=True
+            )
+
+            st.write("")
+
+            # IMPORTANT:
+            # Every widget has a unique key.
+
+            username = st.text_input(
+                "Username",
+                placeholder="Enter username",
+                key="login_username"
+            )
+
+            password = st.text_input(
+                "Password",
+                type="password",
+                placeholder="Enter password",
+                key="login_password"
+            )
+
+            passkey = st.text_input(
+                "Passkey",
+                type="password",
+                placeholder="Enter passkey",
+                key="login_passkey"
+            )
+
+            st.write("")
+
+            login_clicked = st.button(
+                "🔐 Login",
+                type="primary",
+                key="login_button"
+            )
+
+            if login_clicked:
+
+                # ==================================================
+                # YOUR LOGIN DETAILS
+                # ==================================================
+
+                correct_username = "admin"
+                correct_password = "reqpilot123"
+                correct_passkey = "G14"
+
+                # ==================================================
+                # CHECK LOGIN
+                # ==================================================
+
+                if (
+                    username.strip() == correct_username
+                    and password == correct_password
+                    and passkey == correct_passkey
+                ):
+
+                    st.session_state.logged_in = True
+
+                    st.rerun()
+
+                else:
+
+                    st.error(
+                        "❌ Incorrect username, password or passkey."
+                    )
+
+            st.write("")
+
+            st.caption(
+                "Demo Login: admin • reqpilot123 • G14"
+            )
+
+
+# ============================================================
+# LOGIN CHECK
+# ============================================================
+
+if not st.session_state.logged_in:
+
+    show_login()
 
     st.stop()
 
 
-# =========================================================
-# LOCK SCREEN
-# =========================================================
+# ============================================================
+# MAIN REQPILOT PAGE
+# ============================================================
 
-st.markdown(
-    '<div class="lock-icon">🔐</div>',
-    unsafe_allow_html=True
-)
+with st.sidebar:
 
-st.markdown(
-    '<div class="login-title">ReqPilot</div>',
-    unsafe_allow_html=True
-)
+    st.title("🚀 ReqPilot")
 
-st.markdown(
-    '<div class="login-subtitle">Secure Access</div>',
-    unsafe_allow_html=True
-)
+    st.caption(
+        "AI Requirements Engineering Agent"
+    )
 
+    st.divider()
 
-# =========================================================
-# GLASS LOGIN PANEL
-# =========================================================
-
-st.markdown(
-    '<div class="login-panel">',
-    unsafe_allow_html=True
-)
-
-username_input = st.text_input(
-    "USERNAME",
-    placeholder="Enter username"
-)
-
-password_input = st.text_input(
-    "PASSWORD",
-    type="password",
-    placeholder="Enter password"
-)
-
-passkey_input = st.text_input(
-    "PASSKEY",
-    type="password",
-    placeholder="Enter passkey"
-)
-
-st.write("")
-
-login = st.button(
-    "🔓  UNLOCK REQPILOT",
-    type="primary"
-)
-
-st.markdown(
-    '</div>',
-    unsafe_allow_html=True
-)
-
-
-# =========================================================
-# LOGIN VALIDATION
-# =========================================================
-
-if login:
-
-    if (
-        username_input == USERNAME
-        and password_input == PASSWORD
-        and passkey_input == PASSKEY
+    if st.button(
+        "🚪 Logout",
+        key="logout_button"
     ):
 
-        st.session_state.authenticated = True
+        st.session_state.logged_in = False
 
         st.rerun()
 
-    else:
 
-        st.error(
-            "Incorrect username, password, or passkey."
+# ============================================================
+# MAIN HERO
+# ============================================================
+
+with st.container(border=True):
+
+    st.caption(
+        "G14 • AI REQUIREMENTS ENGINEERING"
+    )
+
+    st.title(
+        "Welcome to ReqPilot 🚀"
+    )
+
+    st.write(
+        "Your AI-powered Requirements Engineering workspace."
+    )
+
+
+# ============================================================
+# DASHBOARD
+# ============================================================
+
+col1, col2, col3 = st.columns(3)
+
+
+with col1:
+
+    with st.container(border=True):
+
+        st.subheader("📖 File Reader")
+
+        st.write(
+            "Upload and read your project requirements."
         )
 
 
-# =========================================================
-# FOOTER
-# =========================================================
+with col2:
 
-st.markdown(
-    '<div class="footer">ReqPilot • Protected Workspace</div>',
-    unsafe_allow_html=True
-)
+    with st.container(border=True):
+
+        st.subheader("🤖 AI Analysis")
+
+        st.write(
+            "Analyze requirements using AI."
+        )
+
+
+with col3:
+
+    with st.container(border=True):
+
+        st.subheader("🧪 Test Cases")
+
+        st.write(
+            "Generate test scenarios from requirements."
+        )
+
+
+# ============================================================
+# STATUS
+# ============================================================
+
+st.write("")
+
+with st.container(border=True):
+
+    st.subheader("✅ Login Status")
+
+    st.success(
+        "You are successfully logged in to ReqPilot."
+    )
