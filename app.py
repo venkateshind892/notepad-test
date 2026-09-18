@@ -1324,3 +1324,389 @@ st.write("")
 st.caption(
     "ReqPilot • Secure Login"
 )
+import streamlit as st
+
+# =========================================================
+# PAGE CONFIG
+# =========================================================
+
+st.set_page_config(
+    page_title="ReqPilot",
+    page_icon="🔐",
+    layout="centered"
+)
+
+# =========================================================
+# LOGIN CREDENTIALS
+# CHANGE THESE
+# =========================================================
+
+USERNAME = "admin"
+PASSWORD = "12345"
+PASSKEY = "REQPILOT"
+
+# =========================================================
+# SESSION
+# =========================================================
+
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+
+# =========================================================
+# PREMIUM LOCKSCREEN UI
+# =========================================================
+
+st.markdown("""
+<style>
+
+/* ---------- BACKGROUND ---------- */
+
+.stApp {
+    background:
+        radial-gradient(
+            circle at 15% 15%,
+            rgba(92, 65, 255, 0.35),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 85% 20%,
+            rgba(0, 190, 255, 0.25),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 50% 100%,
+            rgba(170, 70, 255, 0.20),
+            transparent 35%
+        ),
+        #060810;
+
+    color: #ffffff;
+}
+
+/* ---------- CENTER ---------- */
+
+.block-container {
+    max-width: 460px;
+    padding-top: 7vh;
+    padding-bottom: 5vh;
+}
+
+/* ---------- LOCK ICON ---------- */
+
+.lock-icon {
+    width: 92px;
+    height: 92px;
+
+    margin: 0 auto 22px auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: rgba(255,255,255,0.09);
+
+    border: 1px solid rgba(255,255,255,0.20);
+
+    box-shadow:
+        0 15px 50px rgba(0,0,0,0.35),
+        inset 0 1px 0 rgba(255,255,255,0.15);
+
+    backdrop-filter: blur(25px);
+
+    font-size: 42px;
+}
+
+/* ---------- TITLE ---------- */
+
+.login-title {
+    text-align: center;
+
+    font-size: 38px;
+
+    font-weight: 800;
+
+    letter-spacing: -1.5px;
+
+    color: #ffffff;
+
+    margin-bottom: 6px;
+}
+
+/* ---------- SUBTITLE ---------- */
+
+.login-subtitle {
+    text-align: center;
+
+    font-size: 15px;
+
+    color: rgba(255,255,255,0.65);
+
+    margin-bottom: 28px;
+}
+
+/* ---------- GLASS PANEL ---------- */
+
+.login-panel {
+    padding: 32px;
+
+    border-radius: 28px;
+
+    background: rgba(255,255,255,0.075);
+
+    border: 1px solid rgba(255,255,255,0.16);
+
+    backdrop-filter: blur(30px);
+
+    -webkit-backdrop-filter: blur(30px);
+
+    box-shadow:
+        0 25px 70px rgba(0,0,0,0.45),
+        inset 0 1px 0 rgba(255,255,255,0.12);
+}
+
+/* ---------- INPUT LABELS ---------- */
+
+.stTextInput label {
+    color: #ffffff !important;
+
+    font-size: 14px !important;
+
+    font-weight: 700 !important;
+}
+
+/* ---------- INPUT BOX ---------- */
+
+div[data-baseweb="input"] {
+    background: rgba(255,255,255,0.075) !important;
+
+    border: 1px solid rgba(255,255,255,0.16) !important;
+
+    border-radius: 14px !important;
+
+    min-height: 48px;
+}
+
+/* ---------- INPUT TEXT ---------- */
+
+div[data-baseweb="input"] input {
+    color: #ffffff !important;
+
+    font-size: 15px !important;
+}
+
+/* ---------- PLACEHOLDER ---------- */
+
+div[data-baseweb="input"] input::placeholder {
+    color: rgba(255,255,255,0.40) !important;
+}
+
+/* ---------- LOGIN BUTTON ---------- */
+
+.stButton > button {
+
+    width: 100%;
+
+    height: 52px;
+
+    border-radius: 15px;
+
+    border: 1px solid rgba(255,255,255,0.20);
+
+    background:
+        linear-gradient(
+            135deg,
+            #7057ff,
+            #168cff
+        );
+
+    color: white;
+
+    font-size: 16px;
+
+    font-weight: 750;
+
+    box-shadow:
+        0 12px 30px rgba(50,100,255,0.25);
+
+    transition: all 0.2s ease;
+}
+
+.stButton > button:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 16px 38px rgba(50,100,255,0.35);
+}
+
+/* ---------- ERROR ---------- */
+
+div[data-testid="stAlert"] {
+    border-radius: 13px;
+}
+
+/* ---------- FOOTER ---------- */
+
+.footer {
+    text-align: center;
+
+    color: rgba(255,255,255,0.35);
+
+    font-size: 12px;
+
+    margin-top: 22px;
+}
+
+/* ---------- HIDE STREAMLIT UI ---------- */
+
+#MainMenu {
+    visibility: hidden;
+}
+
+header {
+    visibility: hidden;
+}
+
+footer {
+    visibility: hidden;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+
+# =========================================================
+# AFTER LOGIN
+# =========================================================
+
+if st.session_state.authenticated:
+
+    st.markdown(
+        '<div class="lock-icon">🚀</div>',
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        '<div class="login-title">ReqPilot</div>',
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        '<div class="login-subtitle">Welcome back</div>',
+        unsafe_allow_html=True
+    )
+
+    st.success("🔓 Access granted")
+
+    st.write("")
+
+    st.subheader("AI Requirements Engineering")
+
+    st.write(
+        "Your ReqPilot workspace is ready."
+    )
+
+    st.write("")
+
+    if st.button("🔒 Lock / Logout"):
+
+        st.session_state.authenticated = False
+
+        st.rerun()
+
+    st.stop()
+
+
+# =========================================================
+# LOCK SCREEN
+# =========================================================
+
+st.markdown(
+    '<div class="lock-icon">🔐</div>',
+    unsafe_allow_html=True
+)
+
+st.markdown(
+    '<div class="login-title">ReqPilot</div>',
+    unsafe_allow_html=True
+)
+
+st.markdown(
+    '<div class="login-subtitle">Secure Access</div>',
+    unsafe_allow_html=True
+)
+
+
+# =========================================================
+# GLASS LOGIN PANEL
+# =========================================================
+
+st.markdown(
+    '<div class="login-panel">',
+    unsafe_allow_html=True
+)
+
+username_input = st.text_input(
+    "USERNAME",
+    placeholder="Enter username"
+)
+
+password_input = st.text_input(
+    "PASSWORD",
+    type="password",
+    placeholder="Enter password"
+)
+
+passkey_input = st.text_input(
+    "PASSKEY",
+    type="password",
+    placeholder="Enter passkey"
+)
+
+st.write("")
+
+login = st.button(
+    "🔓  UNLOCK REQPILOT",
+    type="primary"
+)
+
+st.markdown(
+    '</div>',
+    unsafe_allow_html=True
+)
+
+
+# =========================================================
+# LOGIN VALIDATION
+# =========================================================
+
+if login:
+
+    if (
+        username_input == USERNAME
+        and password_input == PASSWORD
+        and passkey_input == PASSKEY
+    ):
+
+        st.session_state.authenticated = True
+
+        st.rerun()
+
+    else:
+
+        st.error(
+            "Incorrect username, password, or passkey."
+        )
+
+
+# =========================================================
+# FOOTER
+# =========================================================
+
+st.markdown(
+    '<div class="footer">ReqPilot • Protected Workspace</div>',
+    unsafe_allow_html=True
+)
