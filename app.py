@@ -2602,3 +2602,55 @@ if uploaded_file:
     import streamlit as st
 import PyPDF2
 
+import streamlit as st
+
+st.set_page_config(
+    page_title="ReqPilot AI",
+    page_icon="📄",
+    layout="wide"
+)
+
+st.title("📄 ReqPilot AI — File Reader")
+
+uploaded_file = st.file_uploader(
+    "Upload your requirement document",
+    type=["txt", "md"]
+)
+
+if uploaded_file is not None:
+
+    try:
+        content = uploaded_file.read()
+
+        # Decode text file
+        text = content.decode("utf-8", errors="ignore")
+
+        st.success(f"✅ {uploaded_file.name} loaded successfully")
+
+        st.subheader("📖 Reader Mode")
+
+        st.text_area(
+            "Document Content",
+            text,
+            height=600
+        )
+
+        # Basic requirement analysis
+        st.subheader("🤖 ReqPilot Analysis")
+
+        lines = [
+            line.strip()
+            for line in text.splitlines()
+            if line.strip()
+        ]
+
+        st.write(f"**Total lines:** {len(lines)}")
+        st.write(f"**Characters:** {len(text)}")
+        st.write(f"**Words:** {len(text.split())}")
+
+    except Exception as e:
+        st.error("Unable to read the file.")
+        st.code(str(e))
+
+else:
+    st.info("👆 Upload a TXT or Markdown requirement file to start.")
