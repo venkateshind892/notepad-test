@@ -2252,3 +2252,13 @@ st.write("")
 st.caption(
     "ReqPilot • AI Requirements Engineering Agent • G14"
 )
+preset = st.selectbox(
+    "Choose a product idea",
+    [
+        "Custom Idea",
+        "QuickCart Grocery Platform",
+        "AI Fitness Platform",
+        "EV Charging Platform",
+        "Student Learning Platform"
+    ]
+)
